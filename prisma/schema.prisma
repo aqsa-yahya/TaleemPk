@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// 1. User Model
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  name         String?
+  password     String?
+  role         Role           @default(STUDENT)
+  board        Board?
+  grade        Grade?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  pdfSummaries PdfSummary[]
+  quizzes      Quiz[]
+  progress     UserProgress[]
+}
+
+// 2. AI PDF Workspace Model
+model PdfSummary {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title              String
+  fileUrl            String
+  summaryText        String   @db.Text
+  extractedKeyPoints Json?
+  createdAt          DateTime @default(now())
+}
+
+// 3. Quiz Model
+model Quiz {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectName    String
+  score          Int
+  totalQuestions Int
+  createdAt      DateTime @default(now())
+}
+
+// 4. User Progress Model
+model UserProgress {
+  id                   String   @id @default(uuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectName          String
+  completionPercentage Int      @default(0)
+  lastStudiedTopic     String?
+  updatedAt            DateTime @updatedAt
+}
+
+// Enums
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum Board {
+  BISE_LAHORE
+  BISE_RAWALPINDI
+  BISE_MULTAN
+  FEDERAL
+  OTHER
+}
+
+enum Grade {
+  GRADE_9
+  GRADE_10
+  GRADE_11
+  GRADE_12
+}
